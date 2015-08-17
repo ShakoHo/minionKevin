@@ -1,27 +1,16 @@
 # Pull all dependencies for minionKevin
 
-kevin-env = kevin-env
-virtual-env-exists = $(shell if [ -d "kevin-env" ]; then echo "exists"; fi)
+install: venv lib-install
 
-install: virtual-env activate lib-install
-
-virtual-env:
-ifneq ($(virtual-env-exists),exists)
-	@virtualenv ${kevin-env}
-else
-	@echo "virtual environment exists." 
+venv:
+ifndef VIRTUAL_ENV
+		virtualenv kevin-env
 endif
 
-lib-install: virtual-env
-	$(shell if [ -z "$$VIRTUAL_ENV" ]; then\
-			 . ./kevin-env/bin/activate;\
-		fi;\
-		pip install jenkinsapi 1>&2 2> /dev/null;)
-
-activate: virtual-env
-	$(shell if [ -z "$$VIRTUAL_ENV" ]; then\
-			 . ./kevin-env/bin/activate;\
-		fi;)
+lib-install:
+		. kevin-env/bin/activate; \
+		pip install jenkinsapi;
 
 clean:
-	@rm -rf ${kevin-env}
+		rm -rf kevin-env
+
