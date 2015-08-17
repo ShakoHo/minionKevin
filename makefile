@@ -9,6 +9,7 @@ endif
 
 lib-install:
 		. kevin-env/bin/activate; \
+		pwd;\
 		pip install jenkinsapi;
 
 clean:
