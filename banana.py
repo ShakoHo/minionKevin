@@ -134,7 +134,7 @@ class BananaGenerator(object):
                         crash_no = tmp_str[tmp_str.find("has")+4:tmp_str.find("crashes")]
                     else:
                         crash_no = tmp_str[tmp_str.find("has")+4:tmp_str.find("crashes")]
-                    return_crash_no = crash_no
+                    return_crash_no = int(crash_no.strip())
         return return_crash_no
 
     def get_build_id(self, file_path):
