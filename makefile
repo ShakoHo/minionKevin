@@ -9,8 +9,7 @@ endif
 
 lib-install:
 		. kevin-env/bin/activate; \
-		pwd;\
-		pip install jenkinsapi;
+		python setup.py install;
 
 clean:
 		rm -rf kevin-env

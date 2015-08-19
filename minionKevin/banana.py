@@ -20,7 +20,7 @@ class BananaGenerator(object):
     EXPECTED_DATE = None
 
     def __init__(self):
-        self.jenkinsObj = Jenkins(self.JENKINS_URL)
+
 
         self.arg_parser = argparse.ArgumentParser(description='Generate raptor json data and upload it',
                                                   formatter_class=ArgumentDefaultsHelpFormatter)
@@ -50,6 +50,8 @@ class BananaGenerator(object):
         self.r_pwd = self.args.raptor_pwd
 
         self.r_db = self.args.raptor_db
+
+        self.jenkinsObj = Jenkins(self.JENKINS_URL)
 
     def get_expected_date(self):
         self.EXPECTED_DATE = datetime.datetime.today() - datetime.timedelta(days=self.SHIFT_DAY)
