@@ -140,7 +140,7 @@ class BananaGenerator(object):
         return return_crash_no
 
     def get_build_id(self, file_path):
-        dev_build_id = "Can't find build id"
+        dev_build_id = "0"
         with open(file_path) as console_log_file_obj:
             file_ctnt = console_log_file_obj.readlines()
             dev_build_id_list = [line.strip() for line in file_ctnt if "Build ID" in line]
@@ -154,7 +154,7 @@ class BananaGenerator(object):
         return dev_build_id
 
     def get_device_id(self, file_path):
-        device_id = "Can't find device id"
+        device_id = "0"
         with open(file_path) as console_log_file_obj:
             file_ctnt = console_log_file_obj.readlines()
             device_id_list = [line.strip() for line in file_ctnt if "Get device with serial" in line]
@@ -171,9 +171,11 @@ class BananaGenerator(object):
         result = copy.deepcopy(job_detail)
         for build_id in job_detail.keys():
             console_log_path = os.path.join(self.CONSOLE_LOG_DIR, str(build_id), "log")
-            result[build_id]['build_id'] = self.get_build_id(console_log_path)
             result[build_id]['device_id'] = self.get_device_id(console_log_path)
+            result[build_id]['build_id'] = self.get_build_id(console_log_path)
             result[build_id]['crash_no'] += self.get_device_crash_no(console_log_path)
+            if result[build_id]['device_id'] == "0" or result[build_id]['build_id'] == "0":
+                result.pop(build_id)
         return result
 
     def get_build_detail(self):
