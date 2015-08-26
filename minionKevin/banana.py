@@ -71,9 +71,10 @@ class BananaGenerator(object):
         job_detail = self.get_build_detail()
         job_detail = self.get_device_info(job_detail)
         raptor_data = self.convert_to_raptor_data(job_detail)
-        data_json_file_path = self.dump_raptor_data_to_json_file(raptor_data)
-        event_json_file_path = self.generate_event_data_to_json_file(raptor_data)
-        self.upload_raptor_data([data_json_file_path, event_json_file_path], self.r_host_name, self.r_port_no, self.r_user, self.r_pwd, self.r_db)
+        if len(raptor_data[self.INSPECT_JOB_NAME]) > 0:
+            data_json_file_path = self.dump_raptor_data_to_json_file(raptor_data)
+            event_json_file_path = self.generate_event_data_to_json_file(raptor_data)
+            self.upload_raptor_data([data_json_file_path, event_json_file_path], self.r_host_name, self.r_port_no, self.r_user, self.r_pwd, self.r_db)
 
     def dump_raptor_data_to_json_file(self, raptor_data):
         output_file_name = self.EXPECTED_DATE.strftime('%Y%m%d') + "_data.json"
