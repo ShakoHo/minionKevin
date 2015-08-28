@@ -11,6 +11,7 @@ from jenkinsapi.jenkins import Jenkins
 
 class BananaGenerator(object):
     JENKINS_URL = "http://localhost:8080"
+    SERIES_NAME = "mtbf"
     INSPECT_JOB_NAME = "flamekk.vmaster.moztwlab01.512"
     NODE_NAME = "moztwlab-01"
     CONSOLE_LOG_DIR = os.path.join(os.path.sep, "var", "lib", "jenkins", "jobs", INSPECT_JOB_NAME, 'configurations',
@@ -71,7 +72,7 @@ class BananaGenerator(object):
         job_detail = self.get_build_detail()
         job_detail = self.get_device_info(job_detail)
         raptor_data = self.convert_to_raptor_data(job_detail)
-        if len(raptor_data[self.INSPECT_JOB_NAME]) > 0:
+        if len(raptor_data[self.SERIES_NAME]) > 0:
             data_json_file_path = self.dump_raptor_data_to_json_file(raptor_data)
             event_json_file_path = self.generate_event_data_to_json_file(raptor_data)
             self.upload_raptor_data([data_json_file_path, event_json_file_path], self.r_host_name, self.r_port_no, self.r_user, self.r_pwd, self.r_db)
@@ -92,8 +93,8 @@ class BananaGenerator(object):
         device_name = tmp_list[0]
         memory_set = tmp_list[3]
         event_data = {'events': [{"title":"buildInfo",
-                                  "text": "buildid: " + raptor_data[self.INSPECT_JOB_NAME][0]['buildid'],
-                                  "time": raptor_data[self.INSPECT_JOB_NAME][0]['time'],
+                                  "text": "buildid: " + raptor_data[self.SERIES_NAME][0]['buildid'],
+                                  "time": raptor_data[self.SERIES_NAME][0]['time'],
                                   "tags": None,
                                   "branch": branch_name,
                                   "device": device_name,
@@ -109,15 +110,20 @@ class BananaGenerator(object):
         return output_file_path
 
     def convert_to_raptor_data(self, job_detail):
-        result = {self.INSPECT_JOB_NAME: []}
+        build_configuration = self.INSPECT_JOB_NAME.split(".")
+        result = {self.SERIES_NAME: []}
         for build_id in job_detail.keys():
             insert_dict = {}
+            insert_dict['model'] = build_configuration[0]
+            insert_dict['branch'] = build_configuration[1]
+            insert_dict['node'] = build_configuration[2]
+            insert_dict['memory'] = build_configuration[3]
             insert_dict['runningHr'] = job_detail[build_id]['running_secs'] / 60.0 / 60.0
             insert_dict['buildid']   = job_detail[build_id]['build_id']
             insert_dict['time']      = self.convert_datetime_to_timestamp(job_detail[build_id]['build_id'])
             insert_dict['crashNo']   = job_detail[build_id]['crash_no']
             insert_dict['deviceId']  = job_detail[build_id]['device_id']
-            result[self.INSPECT_JOB_NAME].append(insert_dict)
+            result[self.SERIES_NAME].append(insert_dict)
         return result
 
     def convert_datetime_to_timestamp(self, input_str, datetime_format="%Y%m%d%H%M%S"):
