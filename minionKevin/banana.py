@@ -58,7 +58,7 @@ class BananaGenerator(object):
         self.EXPECTED_DATE = datetime.datetime.today() - datetime.timedelta(days=self.SHIFT_DAY)
 
     def upload_raptor_data(self, upload_data_path_list, host_name, port_no, user_name, pwd, database_name):
-        cmd_format = "raptor submit %s --host %s --port %s --username %s --password %s --database %s"
+        cmd_format = "raptor submit %s --host %s --port %s --username %s --password %s --database %s --protocol https"
         for upload_data_path in upload_data_path_list:
             cmd_str = cmd_format % (upload_data_path, host_name, port_no, user_name, pwd, database_name)
             result = commands.getstatusoutput(cmd_str)
