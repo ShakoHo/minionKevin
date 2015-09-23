@@ -73,16 +73,17 @@ class BananaGenerator(object):
         job_detail = self.get_device_info(job_detail)
         raptor_data = self.convert_to_raptor_data(job_detail)
         if len(raptor_data) > 0:
-            data_json_file_path = self.dump_raptor_data_to_json_file(raptor_data)
-            self.upload_raptor_data([data_json_file_path], self.r_host_name, self.r_port_no, self.r_user, self.r_pwd, self.r_db)
+            output_file_path = self.dump_raptor_data_to_json_file(raptor_data)
+            self.upload_raptor_data(output_file_path, self.r_host_name, self.r_port_no, self.r_user, self.r_pwd, self.r_db)
 
     def dump_raptor_data_to_json_file(self, raptor_data):
+        output_file_path = []
         for data_type in raptor_data.keys():
             output_file_name = self.EXPECTED_DATE.strftime('%Y%m%d') + "_" + data_type + ".json"
             output_dir = os.path.join(os.getcwd(), self.OUTPUT_JSON_DIR)
             if not os.path.exists(output_dir):
                 os.mkdir(output_dir)
-            output_file_path = os.path.join(output_dir, output_file_name)
+            output_file_path.append(os.path.join(output_dir, output_file_name))
             with open(output_file_path, "w") as json_output_file:
                 json.dump(raptor_data[data_type], json_output_file)
         return output_file_path
