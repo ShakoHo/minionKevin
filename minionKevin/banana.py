@@ -77,16 +77,17 @@ class BananaGenerator(object):
             self.upload_raptor_data(output_file_path, self.r_host_name, self.r_port_no, self.r_user, self.r_pwd, self.r_db)
 
     def dump_raptor_data_to_json_file(self, raptor_data):
-        output_file_path = []
+        result = []
         for data_type in raptor_data.keys():
             output_file_name = self.EXPECTED_DATE.strftime('%Y%m%d') + "_" + data_type + ".json"
             output_dir = os.path.join(os.getcwd(), self.OUTPUT_JSON_DIR)
             if not os.path.exists(output_dir):
                 os.mkdir(output_dir)
-            output_file_path.append(os.path.join(output_dir, output_file_name))
+            output_file_path = os.path.join(output_dir, output_file_name)
+            result.append(output_file_path)
             with open(output_file_path, "w") as json_output_file:
                 json.dump(raptor_data[data_type], json_output_file)
-        return output_file_path
+        return result
 
     def convert_to_raptor_data(self, job_detail):
         build_configuration = self.INSPECT_JOB_NAME.split(".")
