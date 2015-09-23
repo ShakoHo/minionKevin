@@ -72,63 +72,59 @@ class BananaGenerator(object):
         job_detail = self.get_build_detail()
         job_detail = self.get_device_info(job_detail)
         raptor_data = self.convert_to_raptor_data(job_detail)
-        if len(raptor_data[self.SERIES_NAME]) > 0:
+        if len(raptor_data) > 0:
             data_json_file_path = self.dump_raptor_data_to_json_file(raptor_data)
-            event_json_file_path = self.generate_event_data_to_json_file(raptor_data)
-            self.upload_raptor_data([data_json_file_path, event_json_file_path], self.r_host_name, self.r_port_no, self.r_user, self.r_pwd, self.r_db)
+            self.upload_raptor_data([data_json_file_path], self.r_host_name, self.r_port_no, self.r_user, self.r_pwd, self.r_db)
 
     def dump_raptor_data_to_json_file(self, raptor_data):
-        output_file_name = self.EXPECTED_DATE.strftime('%Y%m%d') + "_data.json"
-        output_dir = os.path.join(os.getcwd(), self.OUTPUT_JSON_DIR)
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-        output_file_path = os.path.join(output_dir, output_file_name)
-        with open(output_file_path, "w") as json_output_file:
-            json.dump(raptor_data, json_output_file)
-        return output_file_path
-
-    def generate_event_data_to_json_file(self, raptor_data):
-        tmp_list = self.INSPECT_JOB_NAME.split(".")
-        branch_name = tmp_list[1]
-        device_name = tmp_list[0]
-        memory_set = tmp_list[3]
-        event_data = {'events': [{"title":"buildInfo",
-                                  "text": "buildid: " + raptor_data[self.SERIES_NAME][0]['buildid'],
-                                  "time": raptor_data[self.SERIES_NAME][0]['time'],
-                                  "tags": None,
-                                  "branch": branch_name,
-                                  "device": device_name,
-                                  "memory": memory_set
-                                  }]}
-        output_file_name = self.EXPECTED_DATE.strftime('%Y%m%d') + "_event.json"
-        output_dir = os.path.join(os.getcwd(), self.OUTPUT_JSON_DIR)
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-        output_file_path = os.path.join(output_dir, output_file_name)
-        with open(output_file_path, "w") as json_output_file:
-            json.dump(event_data, json_output_file)
+        for data_type in raptor_data.keys():
+            output_file_name = self.EXPECTED_DATE.strftime('%Y%m%d') + "_" + data_type + ".json"
+            output_dir = os.path.join(os.getcwd(), self.OUTPUT_JSON_DIR)
+            if not os.path.exists(output_dir):
+                os.mkdir(output_dir)
+            output_file_path = os.path.join(output_dir, output_file_name)
+            with open(output_file_path, "w") as json_output_file:
+                json.dump(raptor_data[data_type], json_output_file)
         return output_file_path
 
     def convert_to_raptor_data(self, job_detail):
         build_configuration = self.INSPECT_JOB_NAME.split(".")
-        result = {self.SERIES_NAME: []}
+        result = {'data':[], 'event':[]}
+        create_event_flag = False
         for build_id in job_detail.keys():
-            insert_dict = {}
-            insert_dict['model'] = build_configuration[0]
-            insert_dict['branch'] = build_configuration[1]
-            insert_dict['node'] = build_configuration[2]
-            insert_dict['memory'] = build_configuration[3]
-            insert_dict['runningHr'] = job_detail[build_id]['running_secs'] / 60.0 / 60.0
-            insert_dict['buildid']   = job_detail[build_id]['build_id']
-            insert_dict['time']      = self.convert_datetime_to_timestamp(job_detail[build_id]['build_id'])
-            insert_dict['crashNo']   = job_detail[build_id]['crash_no']
-            insert_dict['deviceId']  = job_detail[build_id]['device_id']
-            result[self.SERIES_NAME].append(insert_dict)
+            insert_dict = {'key': self.SERIES_NAME}
+            insert_dict['timestamp'] = self.convert_datetime_to_timestamp(job_detail[build_id]['build_id'])
+
+            insert_dict['fields'] = {}
+            insert_dict['fields']['value'] = job_detail[build_id]['running_secs'] / 60.0 / 60.0
+            insert_dict['fields']['failures'] = job_detail[build_id]['crash_no']
+
+            insert_dict['tags'] = {}
+            insert_dict['tags']['branch'] = build_configuration[1].replace("vmaster","master")
+            insert_dict['tags']['device'] = build_configuration[0].replace("flamekk","flame-kk")
+            insert_dict['tags']['deviceId'] = job_detail[build_id]['device_id']
+            insert_dict['tags']['memory'] = build_configuration[3]
+            insert_dict['tags']['node'] = build_configuration[2]
+            if create_event_flag is False and insert_dict['tags']['deviceId'] != 0:
+                event_data = {}
+                event_data['timestamp'] = insert_dict['timestamp']
+                event_data['key'] = "annotation"
+                event_data['fields'] = {}
+                event_data['fields']['text'] = job_detail[build_id]['build_id']
+                event_data['tags'] = {}
+                event_data['tags']['title'] = "BuildId"
+                event_data['tags']['test'] = "mtbf"
+                event_data['tags']['branch'] = insert_dict['tags']['branch']
+                event_data['tags']['device'] = insert_dict['tags']['device']
+                event_data['tags']['memory'] = insert_dict['tags']['memory']
+                result['event'].append(event_data)
+                create_event_flag = True
+            result['data'].append(insert_dict)
         return result
 
     def convert_datetime_to_timestamp(self, input_str, datetime_format="%Y%m%d%H%M%S"):
         datetime_obj = datetime.datetime.strptime(input_str, datetime_format)
-        timestamp_obj = time.mktime(datetime_obj.timetuple()) * 1000
+        timestamp_obj = str((int(time.mktime(datetime_obj.timetuple()) * 1000) * 1000000) + 1)
         return timestamp_obj
 
     def get_device_crash_no(self,file_path):
