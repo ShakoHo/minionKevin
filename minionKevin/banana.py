@@ -10,7 +10,7 @@ from argparse import ArgumentDefaultsHelpFormatter
 from jenkinsapi.jenkins import Jenkins
 
 class BananaGenerator(object):
-    JENKINS_URL = "http://mtbf-1.ateam.tpe1.mozilla.com:8080"
+    JENKINS_URL = "http://localhost:8080"
     SERIES_NAME = "mtbf"
     INSPECT_JOB_NAME = "flamekk.vmaster.moztwlab01.512"
     NODE_NAME = "moztwlab-01"
